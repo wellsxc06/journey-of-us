@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journey of Us</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #game-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #level-container {
+            display: none;
+        }
+        .level {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-screen">
+            <h1>Journey of Us</h1>
+            <button id="start-button">Start</button>
+        </div>
+        <div id="level-container">
+            <!-- Level content will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        // Define game levels and challenges
+        const levels = [
+            { 
+                name: "First Date", 
+                description: "Unscramble the words to reveal where we went on our first date.",
+                puzzle: "ignikh, evanrs, ockr, nifn, hait", // scrambled words
+                answer: ["hiking,", "ravens,", "rock,", "finn,", "thai"], // correct answer
+		nextLevel: 1
+            },
+
+	    { 
+                name: "Wordle-like Game", 
+                description: "Guess the word related to something special in our relationship.",
+                answer: "reuse", // correct answer
+                maxTries: 6 // maximum number of tries
+            }
+            // Add more levels here
+        ];
+
+        // Define game elements
+        const startButton = document.getElementById("start-button");
+        const levelContainer = document.getElementById("level-container");
+
+        // Event listener for start button click
+        startButton.addEventListener("click", startGame);
+
+function startGame() {
+            // Hide start screen
+            document.getElementById("game-screen").style.display = "none";
+            // Show level container
+            levelContainer.style.display = "block";
+
+            // Start from the first level
+            playLevel(0);
+        }
+
+    function playLevel(levelIndex) {
+    // Clear level content
+    levelContainer.innerHTML = "";
+
+    // Create level elements
+    const level = levels[levelIndex];
+    const levelElement = document.createElement("div");
+    levelElement.classList.add("level");
+    levelElement.innerHTML = `
+        <h2>${level.name}</h2>
+        <p>${level.description}</p>
+    `;
+    if (level.puzzle) {
+        // Create unscramble game
+        levelElement.innerHTML += `
+            <p><strong>Unscramble the words:</strong></p>
+            <p>${scrambleWords(level.puzzle)}</p>
+            <input type="text" id="answer${levelIndex}" placeholder="Your Answer">
+            <button onclick="checkAnswer(${levelIndex})">Submit</button>
+            <div id="result${levelIndex}"></div>
+            <button onclick="nextLevel(${levelIndex})">Next Level</button> <!-- Add a button to manually progress to the next level -->
+        `;
+    } else if (level.answer) {
+        // Create Wordle-like game
+        levelElement.innerHTML += `
+            <p><strong>Guess the word (${level.maxTries} tries):</strong></p>
+            <input type="text" id="guess${levelIndex}" placeholder="Your Guess">
+            <button onclick="checkGuess(${levelIndex})">Submit</button>
+            <div id="result${levelIndex}"></div>
+        `;
+    }
+    levelContainer.appendChild(levelElement);
+
+}
+function nextLevel(levelIndex) {
+    const nextLevelIndex = levelIndex + 1;
+    if (nextLevelIndex < levels.length) {
+        playLevel(nextLevelIndex);
+    }
+}
+
+        function scrambleWords(words) {
+            return words.split(',').map(word => {
+                return word.trim().split('').sort(() => Math.random() - 0.5).join('');
+            }).join(', ');
+        }
+
+        function checkAnswer(levelIndex) {
+            const answerInput = document.getElementById(`answer${levelIndex}`);
+            const resultContainer = document.getElementById(`result${levelIndex}`);
+            const userAnswer = answerInput.value.toLowerCase();
+            const correctAnswer = levels[levelIndex].answer.join(' ');
+
+            if (userAnswer === correctAnswer) {
+                resultContainer.innerHTML = "<p style='color: green;'>Correct!</p>";
+                // Move to the next level if available
+                const nextLevelIndex = levels[levelIndex].nextLevel;
+		if (nextLevelIndex !== undefined && nextLevelIndex < levels.length)
+		{
+			setTimeout(() => {
+				playLevel(nextLevelIndex);
+				}, 1000);// Wait for 1 second before moving to the next level
+                }
+            } else {
+                resultContainer.innerHTML = "<p style='color: red;'>Incorrect. Try again!</p>";
+            }
+        }
+
+        function checkGuess(levelIndex) {
+    const guessInput = document.getElementById(`guess${levelIndex}`);
+    const resultContainer = document.getElementById(`result${levelIndex}`);
+    const userGuess = guessInput.value.toLowerCase();
+    const correctAnswer = levels[levelIndex].answer.toLowerCase();
+    const maxTries = levels[levelIndex].maxTries || 6;
+
+    let feedback = '';
+    let correctLetters = 0;
+
+    // Check if the guess matches the answer
+    for (let i = 0; i < userGuess.length; i++) {
+        if (userGuess[i] === correctAnswer[i]) {
+            feedback += `<span style="color: green;">${userGuess[i]}</span>`;
+            correctLetters++;
+        } else if (correctAnswer.includes(userGuess[i])) {
+            feedback += `<span style="color: yellow;">${userGuess[i]}</span>`;
+        } else {
+            feedback += `<span style="color: grey;">${userGuess[i]}</span>`;
+        }
+    }
+
+    // Display result
+    if (correctLetters === correctAnswer.length) {
+        resultContainer.innerHTML = `<p style='color: green;'>Correct! The answer is ${correctAnswer}</p>`;
+    } else if (maxTries === 1) {
+        resultContainer.innerHTML = `<p style='color: red;'>Out of tries. The answer was ${correctAnswer}</p>`;
+    } else {
+        resultContainer.innerHTML = feedback;
+    }
+}
+    </script>
+</body>
+</html>
